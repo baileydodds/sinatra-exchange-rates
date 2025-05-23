@@ -44,12 +44,31 @@ end
 
 
 get("/:first_currency") do
+  @from_currency = params.fetch("first_currency")
+
   api_url = "https://api.exchangerate.host/list?access_key=#{ENV.fetch("EXCHANGE_RATE_KEY")}"
 
   # Use HTTP.get to retrieve the API data
   @raw_response = HTTP.get(api_url)
   @raw_string = @raw_response.to_s
-  
+  @parsed_data = JSON.parse(@raw_string)
 
+  @currency_hash = @parsed_data.fetch("currencies")
+  @currencies_abbv = @parsed_data.fetch("currencies").keys
+  @num_currencies = @currency_hash.count
   erb(:first_step)
+end
+
+get("/:first_currency/:second_currency") do
+  @from = params.fetch("first_currency")
+  @to = params.fetch("second_currency")
+
+  @url = "https://api.exchangerate.host/convert?access_key=#{ENV.fetch("EXCHANGE_RATE_KEY")}&from=#{@from}&to=#{@to}&amount=1"
+  @raw_response = HTTP.get(@url)
+  @raw_string = @raw_response.to_s
+  @parsed_data = JSON.parse(@raw_string)
+  
+  @conversion_rate = @parsed_data.fetch("result")
+  
+  erb(:second_step)
 end
